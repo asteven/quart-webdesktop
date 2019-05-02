@@ -38,6 +38,12 @@ SSH_PORT = 22
 SSH_USER = 'root'
 SSH_PASSWORD = 'gugus'
 
+# vnc login settings
+VNC_HOST = 'vnc'
+VNC_PORT = 5901
+VNC_PASSWORD = 'vncpassword'
+
+
 async def ws_receive(guac_client):
     while True:
         data = await websocket.receive()
@@ -63,6 +69,7 @@ async def ws_send(guac_client):
     logger.info('Ending sender')
 
 
+
 @bp.websocket('/ws')
 async def ws():
 
@@ -78,11 +85,22 @@ async def ws():
         abort(500)
 
     guac_client = GuacamoleClient(guac_socket, debug=True, logger=logger)
-    await guac_client.handshake(protocol='ssh',
-                 hostname=SSH_HOST,
-                 port=SSH_PORT,
-                 username=SSH_USER,
-                 password=SSH_PASSWORD)
+
+    protocol = 'ssh'
+    #protocol = 'vnc'
+
+    # TODO: the connection info should come from DB/kv/wherever
+    if protocol == 'vnc':
+        await guac_client.handshake(protocol=protocol,
+                     hostname=VNC_HOST,
+                     port=VNC_PORT,
+                     password=VNC_PASSWORD)
+    else:
+        await guac_client.handshake(protocol=protocol,
+                     hostname=SSH_HOST,
+                     port=SSH_PORT,
+                     username=SSH_USER,
+                     password=SSH_PASSWORD)
 
     async with trio.open_nursery() as nursery:
         nursery.start_soon(ws_receive, guac_client)
