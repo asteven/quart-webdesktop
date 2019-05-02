@@ -43,6 +43,9 @@ async def ws_receive(guac_client):
         data = await websocket.receive()
         logger.info('client-to-server %s', data)
         await guac_client.send(data)
+        if data == '10.disconnect;':
+            break
+    logger.info('Ending receiver')
 
 
 async def ws_send(guac_client):
@@ -53,8 +56,11 @@ async def ws_send(guac_client):
             await websocket.send(data)
         else:
             break
+        if data == '10.disconnect;':
+            break
     # End-of-instruction marker
     await websocket.send('0.;')
+    logger.info('Ending sender')
 
 
 @bp.websocket('/ws')
@@ -81,6 +87,9 @@ async def ws():
     async with trio.open_nursery() as nursery:
         nursery.start_soon(ws_receive, guac_client)
         nursery.start_soon(ws_send, guac_client)
+
+    logger.info('Client disconnected from guacd server')
+    await guac_client.close()
 
 
 @bp.websocket('/ws-echo')
