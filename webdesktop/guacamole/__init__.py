@@ -43,6 +43,10 @@ VNC_HOST = 'vnc'
 VNC_PORT = 5901
 VNC_PASSWORD = 'vncpassword'
 
+# Choose protocol to use
+DESKTOP_PROTOCOL = 'ssh'
+#DESKTOP_PROTOCOL = 'vnc'
+
 
 async def ws_receive(guac_client):
     while True:
@@ -86,17 +90,14 @@ async def ws():
 
     guac_client = GuacamoleClient(guac_socket, debug=True, logger=logger)
 
-    protocol = 'ssh'
-    #protocol = 'vnc'
-
     # TODO: the connection info should come from DB/kv/wherever
-    if protocol == 'vnc':
-        await guac_client.handshake(protocol=protocol,
+    if DESKTOP_PROTOCOL == 'vnc':
+        await guac_client.handshake(protocol='vnc',
                      hostname=VNC_HOST,
                      port=VNC_PORT,
                      password=VNC_PASSWORD)
     else:
-        await guac_client.handshake(protocol=protocol,
+        await guac_client.handshake(protocol='ssh',
                      hostname=SSH_HOST,
                      port=SSH_PORT,
                      username=SSH_USER,
